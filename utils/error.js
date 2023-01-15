@@ -3,26 +3,19 @@ function handleError(err, req, res) {
     res.status(400).send({
       message: 'Переданы некорректные данные',
     });
-    return;
-  }
-
-  if (err.name === 'ValidationError') {
+  } else if (err.name === 'ValidationError') {
     res.status(400).send({
       message: err.message,
     });
-    return;
-  }
-
-  if (err.name === 'NotFoundError') {
+  } else if (err.name === 'NotFoundError') {
     res.status(404).send({
       message: err.message,
     });
-    return;
+  } else {
+    res.status(500).send({
+      message: 'Ошибка по-умолчанию',
+    });
   }
-
-  res.status(500).send({
-    message: 'Ошибка по-умолчанию',
-  });
 }
 
 module.exports = { handleError };
