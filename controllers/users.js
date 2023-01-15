@@ -43,6 +43,7 @@ async function updateUser(req, res) {
       userId,
       { name, about },
       { new: true },
+      { runValidators: true },
     );
     res.send(user);
   } catch (err) {
