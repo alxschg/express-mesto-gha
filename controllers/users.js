@@ -35,36 +35,43 @@ async function createUser(req, res) {
   }
 }
 
-async function updateUser(req, res) {
-  try {
-    const userId = req.user._id;
-    const { name, about } = req.body;
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { name, about },
-      { new: true },
-      { runValidators: true },
-    );
-    res.send(user);
-  } catch (err) {
-    handleError(err, req, res);
-  }
-}
+const updateUserData = (res, req) => {
+  const { user: { _id }, body } = req;
+  User.findByIdAndUpdate(_id, body, { new: true, runValidators: true })
+    .orFail(() => {
+      const error = new Error('Пользователь по заданному id отсутствует в базе');
+      error.statusCode = 404;
+      throw error;
+    })
+    .then((user) => res.send({ data: user }))
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        res.status(400).send({ message: `${Object.values(err.errors).map((error) => error.message).join(', ')}` });
+      } else if (err.name === 'CastError') {
+        res.status(400).send({ message: 'Передан невалидный id пользователя' });
+      } else if (err.statusCode === 404) {
+        res.status(404).send({ message: err.message });
+      } else {
+        res.status(500).send({ message: 'Произошла ошибка' });
+      }
+    });
+};
 
-async function updateAvatar(req, res) {
-  try {
-    const userId = req.user._id;
-    const { avatar } = req.body;
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { avatar },
-      { new: true },
-    );
-    res.send(user);
-  } catch (err) {
-    handleError(err, req, res);
+const updateUser = (req, res) => {
+  const { body } = req;
+  if (!body.name || !body.about) {
+    return res.status(400).send({ message: 'Поле "name" и "about" должны быть заполнено' });
   }
-}
+  return updateUserData(res, req);
+};
+
+const updateAvatar = (req, res) => {
+  const { body } = req;
+  if (!body.avatar) {
+    return res.status(400).send({ message: 'Поле "avatar" должно быть заполнено' });
+  }
+  return updateUserData(res, req);
+};
 
 module.exports = {
   getUser,
