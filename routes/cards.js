@@ -1,6 +1,5 @@
 const express = require('express');
 const { celebrate, Joi } = require('celebrate');
-const { validateId } = require('../utils/validateId');
 const {
   createCard,
   getAllCards,
@@ -26,7 +25,7 @@ cards.delete(
   '/:cardId',
   celebrate({
     params: Joi.object().keys({
-      cardId: Joi.string().custom(validateId, 'ObjectId validation'),
+      cardId: Joi.string().alphanum().length(24),
     }),
   }),
   deleteCard,
@@ -35,7 +34,7 @@ cards.put(
   '/:cardId/likes',
   celebrate({
     params: Joi.object().keys({
-      cardId: Joi.string().custom(validateId, 'ObjectId validation'),
+      cardId: Joi.string().alphanum().length(24),
     }),
   }),
   putLike,
@@ -44,7 +43,7 @@ cards.delete(
   '/:cardId/likes',
   celebrate({
     params: Joi.object().keys({
-      cardId: Joi.string().custom(validateId, 'ObjectId validation'),
+      cardId: Joi.string().alphanum().length(24),
     }),
   }),
   deleteLike,

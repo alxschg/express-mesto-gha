@@ -1,6 +1,5 @@
 const express = require('express');
 const { celebrate, Joi } = require('celebrate');
-const { validateId } = require('../utils/validateId');
 const {
   getUser,
   getAllUsers,
@@ -17,7 +16,7 @@ users.get(
   '/:userId',
   celebrate({
     params: Joi.object().keys({
-      cardId: Joi.string().custom(validateId, 'ObjectId validation'),
+      cardId: Joi.string().alphanum().length(24),
     }),
   }),
   getUser,
