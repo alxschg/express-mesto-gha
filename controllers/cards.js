@@ -1,7 +1,7 @@
 const { Card } = require('../models/card');
 const { NotFoundError } = require('../errors/NotFoundError');
-const { UnauthorizedError } = require('../errors/UnauthorizedError');
 const { ValidationError } = require('../errors/ValidationError');
+const { OwnerError } = require('../errors/OwnerError');
 
 async function createCard(req, res, next) {
   try {
@@ -45,7 +45,7 @@ async function deleteCard(req, res, next) {
     const userId = req.user._id;
 
     if (ownerId !== userId) {
-      throw new UnauthorizedError('Удалить можно только свою карточку');
+      throw new OwnerError('Нельзя удалить чужую карточку');
     }
 
     await Card.findByIdAndRemove(cardId);
