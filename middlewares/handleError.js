@@ -1,7 +1,13 @@
-function handleError(err, res, next) {
-  const { statusCode = 500, message } = err;
-  res.status(statusCode).send({ message: statusCode === 500 ? 'Ошибка работы сервера' : message });
-  next();
+// eslint-disable-next-line no-unused-vars
+function handleError(err, req, res, next) {
+  const { statusCode = 500 } = err;
+  let { message } = err;
+
+  if (statusCode === 500) {
+    message = 'Ошибка на сервере';
+  }
+
+  res.status(statusCode).send({ message });
 }
 
-module.exports = handleError;
+module.exports = { handleError };

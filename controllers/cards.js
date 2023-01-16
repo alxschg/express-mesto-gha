@@ -1,15 +1,20 @@
-const mongoose = require('mongoose');
 const { Card } = require('../models/card');
 const { NotFoundError } = require('../errors/NotFoundError');
 const { UnauthorizedError } = require('../errors/UnauthorizedError');
+const { ValidationError } = require('../errors/ValidationError');
 
 async function createCard(req, res, next) {
   try {
     const { name, link } = req.body;
     const ownerId = req.user._id;
     const card = await Card.create({ name, link, owner: ownerId });
-    res.send(card);
+    res.status(201).send(card);
   } catch (err) {
+    if (err.name === 'CastError' || err.name === 'ValidationError') {
+      next(new ValidationError('Неверные данные'));
+      return;
+    }
+
     next(err);
   }
 }
@@ -19,6 +24,10 @@ async function getAllCards(req, res, next) {
     const cards = await Card.find({});
     res.send(cards);
   } catch (err) {
+    if (err.name === 'CastError') {
+      next(new ValidationError('Неверные данные'));
+      return;
+    }
     next(err);
   }
 }
@@ -27,11 +36,7 @@ async function deleteCard(req, res, next) {
   try {
     const { cardId } = req.params;
 
-    let card = mongoose.Types.ObjectId.isValid(cardId);
-
-    if (card) {
-      card = await Card.findById(cardId).populate('owner');
-    }
+    const card = await Card.findById(cardId).populate('owner');
 
     if (!card) {
       throw new NotFoundError('Карточка не найдена');
@@ -64,6 +69,10 @@ async function deleteLike(req, res, next) {
     }
     res.send(card);
   } catch (err) {
+    if (err.name === 'CastError') {
+      next(new ValidationError('Неверные данные'));
+      return;
+    }
     next(err);
   }
 }
@@ -81,6 +90,10 @@ async function putLike(req, res, next) {
     }
     res.send(card);
   } catch (err) {
+    if (err.name === 'CastError') {
+      next(new ValidationError(`Неверные данные в  ${err.path}`));
+      return;
+    }
     next(err);
   }
 }

@@ -1,7 +1,9 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const { errors } = require('celebrate');
+
 const { routes } = require('./routes');
+const { handleError } = require('./middlewares/handleError');
 
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -20,6 +22,7 @@ app.use(express.json());
 app.use(routes);
 
 app.use(errors());
+app.use(handleError);
 
 app.listen(PORT, () => {
   console.log('App started.');

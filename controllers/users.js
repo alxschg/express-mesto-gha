@@ -4,9 +4,9 @@ const { User } = require('../models/user');
 const { NotFoundError } = require('../errors/NotFoundError');
 const { UnauthorizedError } = require('../errors/UnauthorizedError');
 const { ConflictError } = require('../errors/ConflictError');
+const { ValidationError } = require('../errors/ValidationError');
 
 const SALT_LENGTH = 10;
-const { NODE_ENV, JWT_SECRET } = process.env;
 
 async function getUser(req, res, next) {
   try {
@@ -17,6 +17,10 @@ async function getUser(req, res, next) {
     }
     res.send(user);
   } catch (err) {
+    if (err.name === 'CastError') {
+      next(new ValidationError('Неверные данные'));
+      return;
+    }
     next(err);
   }
 }
@@ -45,30 +49,42 @@ async function getCurrentUser(req, res, next) {
   }
 }
 
-const createUser = (req, res, next) => {
-  const {
-    name, about, avatar, email, password,
-  } = req.body;
+async function createUser(req, res, next) {
+  try {
+    const {
+      email,
+      password,
+      name,
+      about,
+      avatar,
+    } = req.body;
+    const passwordHash = await bcrypt.hash(password, SALT_LENGTH);
 
-  bcrypt.hash(password, SALT_LENGTH)
-    .then((hash) => User.create(
-      {
-        name, about, avatar, email, password: hash,
-      },
-    ))
-    .then((user) => {
-      const userWithOutPassword = user.toObject();
-      delete userWithOutPassword.password;
-      res.status(201).send(userWithOutPassword);
-    })
-    .catch((err) => {
-      if (err.code === 11000) {
-        next(new ConflictError('Пользователь с таким email уже существует'));
-        return;
-      }
-      next(err);
+    let user = await User.create({
+      email,
+      password: passwordHash,
+      name,
+      about,
+      avatar,
     });
-};
+
+    user = user.toObject();
+    delete user.password;
+    res.status(201).send(user);
+  } catch (err) {
+    if (err.name === 'CastError') {
+      next(new ValidationError('Неверные данные'));
+      return;
+    }
+    if (err.code === 11000) {
+      next(new ConflictError('Пользователь с таким email уже существует'));
+      return;
+    }
+
+    next(err);
+  }
+}
+
 const updateUserData = (res, req) => {
   const {
     user: { _id },
@@ -126,7 +142,7 @@ const login = (req, res, next) => {
         .then((matched) => {
           if (!matched) {
             throw new UnauthorizedError('Неправильная почта или пароль');
-          } const token = jwt.sign({ _id: user._id }, NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret', { expiresIn: '7d' });
+          } const token = jwt.sign({ _id: user._id }, 'secretkey', { expiresIn: '7d' });
           res.send({ jwt: token });
         });
     })
