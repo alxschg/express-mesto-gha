@@ -72,65 +72,53 @@ async function createUser(req, res, next) {
     delete user.password;
     res.status(201).send(user);
   } catch (err) {
-    if (err.name === 'CastError') {
-      next(new ValidationError('Неверные данные'));
-      return;
-    }
     if (err.code === 11000) {
       next(new ConflictError('Пользователь с таким email уже существует'));
       return;
     }
-
     next(err);
   }
 }
 
-const updateUserData = (res, req) => {
-  const {
-    user: { _id },
-    body,
-  } = req;
-  User.findByIdAndUpdate(_id, body, { new: true, runValidators: true })
-    .orFail(() => {
-      throw new NotFoundError('Пользователь по заданному id отсутствует в базе');
-    })
-    .then((user) => res.send({ data: user }))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(400).send({
-          message: `${Object.values(err.errors)
-            .map((error) => error.message)
-            .join(', ')}`,
-        });
-      } else if (err.name === 'CastError') {
-        res.status(400).send({ message: 'Передан невалидный id пользователя' });
-      } else if (err.statusCode === 404) {
-        res.status(404).send({ message: err.message });
-      } else {
-        res.status(500).send({ message: 'Произошла ошибка' });
-      }
-    });
-};
+async function updateUser(req, res, next) {
+  try {
+    const userId = req.user._id;
+    const { name, about } = req.body;
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { name, about },
+      { new: true, runValidators: true },
+    );
 
-const updateUser = (req, res) => {
-  const { body } = req;
-  if (!body.name || !body.about) {
-    return res
-      .status(400)
-      .send({ message: 'Поле "name" и "about" должны быть заполнено' });
-  }
-  return updateUserData(res, req);
-};
+    if (!user) {
+      throw new NotFoundError('Пользователь не найден');
+    }
 
-const updateAvatar = (req, res) => {
-  const { body } = req;
-  if (!body.avatar) {
-    return res
-      .status(400)
-      .send({ message: 'Поле "avatar" должно быть заполнено' });
+    res.send(user);
+  } catch (err) {
+    next(err);
   }
-  return updateUserData(res, req);
-};
+}
+
+async function updateAvatar(req, res, next) {
+  try {
+    const userId = req.user._id;
+    const { avatar } = req.body;
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { avatar },
+      { new: true },
+    );
+
+    if (!user) {
+      throw new NotFoundError('Пользователь не найден');
+    }
+
+    res.send(user);
+  } catch (err) {
+    next(err);
+  }
+}
 
 const login = (req, res, next) => {
   const { email, password } = req.body;
