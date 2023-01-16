@@ -21,7 +21,11 @@
   },
   "homepage": "https://github.com/alxschg/express-mesto-gha#readme",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "celebrate": "^15.0.1",
     "express": "^4.18.2",
+    "install": "^0.13.0",
+    "jsonwebtoken": "^9.0.0",
     "mongoose": "^6.8.3",
     "validator": "^13.7.0"
   },

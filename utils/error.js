@@ -7,6 +7,10 @@ function handleError(err, req, res) {
     res.status(400).send({
       message: err.message,
     });
+  } else if (err.name === 'UnauthorizedError') {
+    res.status(401).send({
+      message: err.message,
+    });
   } else if (err.name === 'NotFoundError') {
     res.status(404).send({
       message: err.message,
