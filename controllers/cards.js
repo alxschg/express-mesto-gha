@@ -10,11 +10,6 @@ async function createCard(req, res, next) {
     const card = await Card.create({ name, link, owner: ownerId });
     res.status(201).send(card);
   } catch (err) {
-    if (err.name === 'CastError' || err.name === 'ValidationError') {
-      next(new ValidationError('Неверные данные'));
-      return;
-    }
-
     next(err);
   }
 }
@@ -24,10 +19,6 @@ async function getAllCards(req, res, next) {
     const cards = await Card.find({});
     res.send(cards);
   } catch (err) {
-    if (err.name === 'CastError') {
-      next(new ValidationError('Неверные данные'));
-      return;
-    }
     next(err);
   }
 }
