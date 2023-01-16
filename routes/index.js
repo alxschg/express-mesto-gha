@@ -8,6 +8,8 @@ const { createUser, login } = require('../controllers/users');
 
 const routes = express.Router();
 
+routes.all('*', express.json());
+
 routes.post(
   '/signup',
   celebrate({
