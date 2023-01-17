@@ -107,7 +107,7 @@ async function updateAvatar(req, res, next) {
     const user = await User.findByIdAndUpdate(
       userId,
       { avatar },
-      { new: true },
+      { new: true, runValidators: true },
     );
 
     if (!user) {
