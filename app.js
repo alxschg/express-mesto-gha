@@ -26,7 +26,6 @@ app.use(routes);
 
 app.use(errorLogger);
 
-
 app.use(errors());
 app.use(handleError);
 
